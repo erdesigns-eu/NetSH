@@ -5,11 +5,13 @@ If you like this tool, feel free to share it or fork it. If you have some ideas 
 
 The ini file explained:
 
+```
 [Settings]
 ListenAddress=127.0.0.1          // This is the local address (Inside VM).
 ListenPort=3010                  // This is the local port (Inside VM).
 ConnectAddress=192.168.0.203     // This is the host address (fallback when hostname resolving fails)
 ConnectPort=3010                 // This is the host port
 HostName=MacBook-Pro-van-Ernst   // This is the hostname used to automatically resolve the ConnectAddress
+```
 
 You just need to start the application once (can only run once), and it will automatically change the NetSH when network changes.
