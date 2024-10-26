@@ -3,6 +3,6 @@
 	<Transactions>
     <Transaction>2024/08/10 09:53:58.000.548,=C:\Users\ProDesk\Documents\Embarcadero\Studio\Projects\Unit34.pas</Transaction>
     <Transaction>2024/08/10 10:04:35.000.963,C:\Users\ProDesk\Documents\Embarcadero\Studio\Projects\Project29.dproj=C:\Users\ProDesk\Documents\Embarcadero\Studio\Projects\Project29.dproj</Transaction>
-    <Transaction>2024/08/10 10:06:19.000.166,C:\Users\ProDesk\Documents\Embarcadero\Studio\Projects\Project29.dproj=D:\Delphi\Azumuta\NetSH\RunNetSH.dproj</Transaction>
+    <Transaction>2024/08/10 10:06:19.000.166,D:\Delphi\Azumuta\NetSH\RunNetSH.dproj=C:\Users\ProDesk\Documents\Embarcadero\Studio\Projects\Project29.dproj</Transaction>
   </Transactions>
 </BorlandProject>

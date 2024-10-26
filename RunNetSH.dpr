@@ -1,4 +1,15 @@
-﻿program RunNetSH;
+﻿//------------------------------------------------------------------------------
+// PROGRAM        : RunNetSH
+// CONTENTS       : Proxy between HOST and VM
+// VERSION        : 1.0
+// TARGET         : Embarcadero Delphi 12 or higher
+// AUTHOR         : Ernst Reidinga (ERDesigns)
+// STATUS         : Open source under MIT
+// COMPATIBILITY  : Windows 7, 8/8.1, 10, 11
+// RELEASE DATE   : 26/10/2024
+//------------------------------------------------------------------------------
+
+program RunNetSH;
 
 uses
   System.SysUtils,
@@ -13,39 +24,13 @@ uses
 
 {$R *.res}
 
-procedure RunNetSHProxy(ListenAddress, ListenPort, ConnectAddress, ConnectPort: string);
+//------------------------------------------------------------------------------
+// RUN ELEVATED (Admin Rights)
+//------------------------------------------------------------------------------
+function RunElevated(const Command: string): Boolean;
 var
-  Command: string;
   SEI: TShellExecuteInfo;
 begin
-  Command := Format(
-    'netsh interface portproxy add v4tov4 listenaddress=%s listenport=%s connectaddress=%s connectport=%s',
-    [ListenAddress, ListenPort, ConnectAddress, ConnectPort]
-  );
-
-  ZeroMemory(@SEI, SizeOf(SEI));
-  SEI.cbSize := SizeOf(TShellExecuteInfo);
-  SEI.Wnd := 0;
-  SEI.fMask := SEE_MASK_FLAG_DDEWAIT or SEE_MASK_FLAG_NO_UI;
-  SEI.lpVerb := 'runas';
-  SEI.lpFile := 'cmd.exe';
-  SEI.lpParameters := PChar('/C ' + Command);
-  SEI.nShow := SW_HIDE;
-
-  if not ShellExecuteEx(@SEI) then
-    RaiseLastOSError;
-end;
-
-function DeleteNetSHProxy(ListenAddress, ListenPort: string): Boolean;
-var
-  Command: string;
-  SEI: TShellExecuteInfo;
-begin
-  Command := Format(
-    'netsh interface portproxy delete v4tov4 listenaddress=%s listenport=%s',
-    [ListenAddress, ListenPort]
-  );
-
   ZeroMemory(@SEI, SizeOf(SEI));
   SEI.cbSize := SizeOf(TShellExecuteInfo);
   SEI.Wnd := 0;
@@ -58,6 +43,31 @@ begin
   Result := ShellExecuteEx(@SEI);
 end;
 
+//------------------------------------------------------------------------------
+// ADD NetSH PROXY
+//------------------------------------------------------------------------------
+function AddNetSHProxy(ListenAddress, ListenPort, ConnectAddress, ConnectPort: string): Boolean;
+begin
+  Result := RunElevated(Format(
+    'netsh interface portproxy add v4tov4 listenaddress=%s listenport=%s connectaddress=%s connectport=%s',
+    [ListenAddress, ListenPort, ConnectAddress, ConnectPort]
+  ));
+end;
+
+//------------------------------------------------------------------------------
+// DELETE NetSH PROXY
+//------------------------------------------------------------------------------
+function DeleteNetSHProxy(ListenAddress, ListenPort: string): Boolean;
+begin
+  Result := RunElevated(Format(
+    'netsh interface portproxy delete v4tov4 listenaddress=%s listenport=%s',
+    [ListenAddress, ListenPort]
+  ));
+end;
+
+//------------------------------------------------------------------------------
+// RESOLVE IP FROM HOSTNAME
+//------------------------------------------------------------------------------
 function ResolveHostname(const Hostname: string): string;
 var
   WSAData: TWSAData;
@@ -78,6 +88,9 @@ begin
   end;
 end;
 
+//------------------------------------------------------------------------------
+// IS ANOTHER INSTANCE RUNNING
+//------------------------------------------------------------------------------
 function IsAnotherInstanceRunning(const MutexName: string): Boolean;
 begin
   Result := CreateMutex(nil, False, PChar(MutexName)) = 0;
@@ -85,6 +98,9 @@ begin
     Result := GetLastError = ERROR_ALREADY_EXISTS;
 end;
 
+//------------------------------------------------------------------------------
+// MONITOR NETWORK CHANGES
+//------------------------------------------------------------------------------
 procedure MonitorNetworkChanges(var StopFlag: Boolean);
 var
   AddrChangeHandle: THandle;
@@ -101,8 +117,7 @@ begin
       WaitResult := WaitForSingleObject(AddrChangeHandle, INFINITE);
       if WaitResult = WAIT_OBJECT_0 then
       begin
-        // Network change detected
-        Exit;
+        Exit; // Network change detected
       end;
     end else
     begin
@@ -112,6 +127,9 @@ begin
   end;
 end;
 
+//------------------------------------------------------------------------------
+// RUN NetSH CONFIGURATION
+//------------------------------------------------------------------------------
 procedure RunNetSHConfiguration(const ListenAddress, ListenPort, ConnectAddress, ConnectPort: string);
 begin
   // Remove previous portproxy entries
@@ -119,10 +137,13 @@ begin
   DeleteNetSHProxy(ConnectAddress, ConnectPort);
 
   // Add new portproxy entries
-  RunNetSHProxy(ListenAddress, ListenPort, ConnectAddress, ConnectPort);
-  RunNetSHProxy(ConnectAddress, ConnectPort, ListenAddress, ListenPort);
+  AddNetSHProxy(ListenAddress, ListenPort, ConnectAddress, ConnectPort);
+  AddNetSHProxy(ConnectAddress, ConnectPort, ListenAddress, ListenPort);
 end;
 
+//------------------------------------------------------------------------------
+// SHOW WINDOWS NOTIFICATION
+//------------------------------------------------------------------------------
 procedure ShowNotification(const NotificationCenter: TNotificationCenter; const Title: string; const Body: string);
 var
   Notification: TNotification;
@@ -139,6 +160,9 @@ begin
   end;
 end;
 
+//------------------------------------------------------------------------------
+// APPLICATION
+//------------------------------------------------------------------------------
 var
   IniFile: TIniFile;
   IniFilePath: string;
